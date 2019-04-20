@@ -92,7 +92,7 @@ class MOEAD(object):
         self.ksize = ksize
         self.problem = problem
 
-        self.nobj = 2
+        self.nobj = 4
         self.scalar = scalar
 
         self.n_parents = 2       # 1回の交叉の親個体の数
@@ -108,6 +108,8 @@ class MOEAD(object):
 
         if not self.popsize:
             self.init_weight2d()
+        # else:
+        #     self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
 
     def __call__(self, population):
         if not self.popsize:
@@ -133,9 +135,10 @@ class MOEAD(object):
                        self.popsize-self.ksize)
             return list(range(imin, imin+self.ksize))
 
-        self.weight = np.array([[i+1, self.popsize-i]
-                               for i in range(self.popsize)])
+        # self.weight = np.array([[i+1, self.popsize-i]
+        #                        for i in range(self.popsize)])
         self.table = np.array([get_neighbor(i) for i in range(self.popsize)])
+        # self.nobj = len(self.weight)    #nobjを可変に(nomura)
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
 
     def update_reference(self, indiv):
@@ -158,6 +161,8 @@ class MOEAD(object):
             self.popsize = popsize
             self.init_weight2d()
 
+        print("ref_point.shape ",self.ref_point.shape)
+
         population = Population(capacity=self.popsize, origin=self)
 
         while not population.filled():
@@ -166,7 +171,13 @@ class MOEAD(object):
             population.append(fitness)
 
         # self.calc_fitness(population)
+        # self.weight = np.array([[i ,w] for i,w in zip(range(self.popsize), population[0].data.wvalue)])
+        self.weight = np.array([population[i].data.wvalue for i in (range(self.popsize))])
+        print(" ", self.weight)
+        print("weight shape", self.weight.shape)
+
         self.ref_point = np.min([fit.data.wvalue for fit in population], axis=0)
+        print("ref_point ", self.ref_point)
         return population
 
     def advance(self, population):
@@ -195,7 +206,7 @@ class MOEAD(object):
         subpopulation = [population[i] for i in table]
 
         for i, fit in enumerate(subpopulation):
-            fit_value = self.scalar(fit.data, weight, self.ref_point)
+            fit_value = self.scalar(fit.data, weight[i], self.ref_point)
             fit.set_fitness((fit_value,), 1)
 
         select_it = self.select_it(subpopulation, reset_cycle=self.n_cycle)
