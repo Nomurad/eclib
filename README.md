@@ -4,4 +4,4 @@
 
 実装済み
 * NSGA-II
-* MOEA/D
+* MOEA/D(3目的以上も可)
