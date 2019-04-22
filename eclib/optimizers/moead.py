@@ -137,8 +137,11 @@ class MOEAD(object):
                        self.popsize-self.ksize)
             return list(range(imin, imin+self.ksize))
 
-        self.weight = np.array([[i+1, self.popsize-i]
-                               for i in range(self.popsize)])
+        # self.weight = np.array([[i+1, self.popsize-i]
+        #                        for i in range(self.popsize)])
+        self.weight = [[1,0],[0,1]]
+        self.weight.extend([(i/(self.popsize-1.0), 1.0-i/(self.popsize-1.0)) for i in range(1, self.popsize-1)])
+        self.weight = np.array(self.weight)
         self.table = np.array([get_neighbor(i) for i in range(self.popsize)])
         # self.nobj = len(self.weight)    #nobjを可変に(nomura)
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
@@ -146,7 +149,7 @@ class MOEAD(object):
     def update_reference(self, indiv):
         try:
             self.ref_point = np.min([self.ref_point, np.array(indiv.wvalue)],axis=0)
-            print("updata ref point = ", self.ref_point)
+            # print("updata ref point = ", self.ref_point)
         except:
             print(self.ref_point.dtype)
             print(self.ref_point)
