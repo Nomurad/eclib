@@ -45,7 +45,7 @@ class Problem():
 def main(model, out):
     n_dim = 10
     popsize = 100
-    epoch = 1000
+    epoch = 300
 
     problem = Problem()
 
