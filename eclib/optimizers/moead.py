@@ -93,7 +93,7 @@ class MOEAD(object):
         self.ksize = ksize
         self.problem = problem
 
-        self.nobj = n_obj
+        self.nobj = int(n_obj)
         self.scalar = scalar
 
         self.n_parents = 2       # 1回の交叉の親個体の数
