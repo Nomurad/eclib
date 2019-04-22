@@ -47,7 +47,7 @@ from ..operations import BlendCrossover
 from ..operations import SimulatedBinaryCrossover
 from ..operations import PolynomialMutation
 
-# default_selection = TournamentSelection(ksize=2)
+# default_selection = TournamentSelection(ksize=2)s
 default_selection = TournamentSelectionStrict(ksize=2)
 # default_selection = TournamentSelectionDCD()
 # default_crossover = BlendCrossover(alpha=0.5)
@@ -87,12 +87,13 @@ class MOEAD(object):
                  scalar=scalar_chebyshev,
                  selection=default_selection,
                  crossover=default_crossover,
-                 mutation=default_mutation):
+                 mutation=default_mutation,
+                 n_obj=2):
         self.popsize = popsize
         self.ksize = ksize
         self.problem = problem
 
-        self.nobj = 4
+        self.nobj = n_obj
         self.scalar = scalar
 
         self.n_parents = 2       # 1回の交叉の親個体の数
@@ -135,8 +136,8 @@ class MOEAD(object):
                        self.popsize-self.ksize)
             return list(range(imin, imin+self.ksize))
 
-        # self.weight = np.array([[i+1, self.popsize-i]
-        #                        for i in range(self.popsize)])
+        self.weight = np.array([[i+1, self.popsize-i]
+                               for i in range(self.popsize)])
         self.table = np.array([get_neighbor(i) for i in range(self.popsize)])
         # self.nobj = len(self.weight)    #nobjを可変に(nomura)
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
@@ -161,8 +162,6 @@ class MOEAD(object):
             self.popsize = popsize
             self.init_weight2d()
 
-        print("ref_point.shape ",self.ref_point.shape)
-
         population = Population(capacity=self.popsize, origin=self)
 
         while not population.filled():
@@ -172,12 +171,9 @@ class MOEAD(object):
 
         # self.calc_fitness(population)
         # self.weight = np.array([[i ,w] for i,w in zip(range(self.popsize), population[0].data.wvalue)])
-        self.weight = np.array([population[i].data.wvalue for i in (range(self.popsize))])
-        print(" ", self.weight)
-        print("weight shape", self.weight.shape)
+        # self.weight = np.array([population[i].data.wvalue for i in (range(self.popsize))])
 
         self.ref_point = np.min([fit.data.wvalue for fit in population], axis=0)
-        print("ref_point ", self.ref_point)
         return population
 
     def advance(self, population):
@@ -206,7 +202,7 @@ class MOEAD(object):
         subpopulation = [population[i] for i in table]
 
         for i, fit in enumerate(subpopulation):
-            fit_value = self.scalar(fit.data, weight[i], self.ref_point)
+            fit_value = self.scalar(fit.data, weight, self.ref_point)
             fit.set_fitness((fit_value,), 1)
 
         select_it = self.select_it(subpopulation, reset_cycle=self.n_cycle)
