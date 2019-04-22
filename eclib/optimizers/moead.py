@@ -94,6 +94,7 @@ class MOEAD(object):
         self.problem = problem
 
         self.nobj = int(n_obj)
+        print("set nobj = ",self.nobj)
         self.scalar = scalar
 
         self.n_parents = 2       # 1回の交叉の親個体の数
@@ -144,8 +145,8 @@ class MOEAD(object):
 
     def update_reference(self, indiv):
         try:
-            self.ref_point = np.min([self.ref_point, np.array(indiv.wvalue)],
-                                    axis=0)
+            self.ref_point = np.min([self.ref_point, np.array(indiv.wvalue)],axis=0)
+            print("updata ref point = ", self.ref_point)
         except:
             print(self.ref_point.dtype)
             print(self.ref_point)

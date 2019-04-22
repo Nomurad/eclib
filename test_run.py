@@ -55,7 +55,7 @@ def main(model, out):
         creator = Creator(initializer, indiv_pool)
 
         if model == 'moead':
-            optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=3, n_obj=2)
+            optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=3)
         elif model == 'nsga2':
             optimizer = NSGA2(problem=problem, pool=indiv_pool)
         else:
