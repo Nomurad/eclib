@@ -10,3 +10,4 @@ config/
 result/
 .vs/
 test_result/
+temp.txt

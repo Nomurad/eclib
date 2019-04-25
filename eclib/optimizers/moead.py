@@ -240,6 +240,54 @@ class MOEAD(object):
                 fit.rank = rank
         return population
 
+        ################################################################################
+        # weight vector 
+        ################################################################################
+    def weight_generator(self, nobj=None, popsize=None):
+        '''
+         任意の次元の重みベクトルを作成
+        '''
+        import copy
+
+        weights = []
+
+        if not nobj:
+            nobj = self.nobj
+        if not popsize:
+            popsize = self.popsize
+        
+        if nobj == 2:
+            weights = [[1,0],[0,1]]
+            weights.extend([(i/(self.popsize-1.0), 1.0-i/(self.popsize-1.0)) for i in range(1, self.popsize-1)])
+            weights = np.array(weights)
+
+        else:
+            ele_candidate = np.array(list(range(popsize)))/popsize
+
+            def weight_recursive(weights, weight, left, total, idx=0):
+
+                if idx == nobj-1:
+                    weight[idx] = float(left)/float(total)
+                    weights.append(copy.copy(weight))
+                    return weights
+
+                else:
+                    for i in range(left+1):
+                        weight[idx] = float(i)/float(total)
+                        weight_recursive(weights, weight, left-i, total, idx+1)
+
+            weight_recursive(weights, [0.0]*nobj, popsize, popsize)
+            weights = np.array(weights)
+
+            print(f"nobj={nobj}, popsize={popsize}")
+            print(ele_candidate)
+            with open("temp.txt", "w") as f:
+                print(weights, file=f)
+
+        return weights
+        
+
+
 
 ################################################################################
 

@@ -12,7 +12,6 @@ import sys
 from operator import attrgetter
 
 import numpy as np
-import matplotlib.pyplot as plt
 
 from eclib.benchmarks import rosenbrock, zdt1, zdt2, zdt3, zdt4, zdt6
 from eclib.operations import UniformInitializer
@@ -61,6 +60,7 @@ def main(model, out):
         else:
             raise Exception('Unexpected model name')
 
+        optimizer.weight_generator(nobj=3, popsize=10)
         population = optimizer.init_population(creator, popsize=popsize)
         history = [population]
 
@@ -122,6 +122,8 @@ def get_gene_data(out):
     return datas,genomes
 
 def plt_result(out):
+    import matplotlib.pyplot as plt
+    
     datas, genomes = get_gene_data(out)
 
     fig = plt.figure(figsize=(16,9))
