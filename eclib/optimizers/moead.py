@@ -141,7 +141,6 @@ class MOEAD(object):
         #                        for i in range(self.popsize)])
         self.weight = self.weight_generator(nobj=self.nobj, divisions=self.popsize)
         self.table = np.array([get_neighbor(i) for i in range(self.popsize)])
-        # self.nobj = len(self.weight)    #nobjを可変に(nomura)
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
 
     def update_reference(self, indiv):
@@ -283,8 +282,6 @@ class MOEAD(object):
 
         return weights
         
-
-
 
 ################################################################################
 
