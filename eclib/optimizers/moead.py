@@ -277,8 +277,8 @@ class MOEAD(object):
 
             # print(f"nobj={nobj}, popsize={popsize}")
             # print(ele_candidate)
-            with open("temp.txt", "w") as f:
-                np.savetxt(f, weights, fmt='%.2f', delimiter='\t')
+            # with open("temp.txt", "w") as f:
+            #     np.savetxt(f, weights, fmt='%.2f', delimiter='\t')
 
         return weights
         
