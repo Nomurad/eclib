@@ -60,7 +60,7 @@ def main(model, out):
         else:
             raise Exception('Unexpected model name')
 
-        optimizer.weight_generator(nobj=3, popsize=10)
+        optimizer.weight_generator(nobj=4, popsize=50)
         population = optimizer.init_population(creator, popsize=popsize)
         history = [population]
 

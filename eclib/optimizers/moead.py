@@ -157,7 +157,6 @@ class MOEAD(object):
             print(np.array(indiv.wvalue))
             print([self.ref_point, np.array(indiv.wvalue)])
             raise
-            exit()
 
     def init_population(self, creator, popsize=None):
         ''' 初期集団生成
@@ -245,11 +244,9 @@ class MOEAD(object):
         ################################################################################
     def weight_generator(self, nobj=None, popsize=None):
         '''
-         任意の次元の重みベクトルを作成
+         任意の次元を持つ重みベクトルを作成
         '''
         import copy
-
-        weights = []
 
         if not nobj:
             nobj = self.nobj
@@ -258,18 +255,20 @@ class MOEAD(object):
         
         if nobj == 2:
             weights = [[1,0],[0,1]]
-            weights.extend([(i/(self.popsize-1.0), 1.0-i/(self.popsize-1.0)) for i in range(1, self.popsize-1)])
+            weights.extend([(i/(self.popsize-1.0), 1.0-i/(self.popsize-1.0)) 
+                                            for i in range(1, self.popsize-1)])
             weights = np.array(weights)
 
         else:
-            ele_candidate = np.array(list(range(popsize)))/popsize
+            weights = []
+            # ele_candidate = np.array(list(range(popsize+1)))/popsize
 
             def weight_recursive(weights, weight, left, total, idx=0):
 
                 if idx == nobj-1:
                     weight[idx] = float(left)/float(total)
                     weights.append(copy.copy(weight))
-                    return weights
+                    # return weights
 
                 else:
                     for i in range(left+1):
@@ -279,10 +278,10 @@ class MOEAD(object):
             weight_recursive(weights, [0.0]*nobj, popsize, popsize)
             weights = np.array(weights)
 
-            print(f"nobj={nobj}, popsize={popsize}")
-            print(ele_candidate)
+            # print(f"nobj={nobj}, popsize={popsize}")
+            # print(ele_candidate)
             with open("temp.txt", "w") as f:
-                print(weights, file=f)
+                np.savetxt(f, weights, fmt='%.2f', delimiter='\t')
 
         return weights
         
