@@ -109,20 +109,20 @@ class MOEAD(object):
         self.share_fn = CrowdingDistanceCalculator(key=attrgetter('data')) # Fitness -> Individual
 
         if not self.popsize:
-            self.init_weight2d()
+            self.init_weight()
         # else:
         #     self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
 
     def __call__(self, population):
         if not self.popsize:
             self.popsize = len(population)
-            self.init_weight2d()
+            self.init_weight()
             population.sort(key=attrgetter('data'))
 
         next_population = self.advance(population)
         return self.alternate(population, next_population)
 
-    def init_weight2d(self, popsize=None, ksize=None):
+    def init_weight(self, popsize=None, ksize=None):
         ''' 重みベクトルと近傍テーブルの初期化
         '''
         if popsize:
@@ -139,9 +139,7 @@ class MOEAD(object):
 
         # self.weight = np.array([[i+1, self.popsize-i]
         #                        for i in range(self.popsize)])
-        self.weight = [[1,0],[0,1]]
-        self.weight.extend([(i/(self.popsize-1.0), 1.0-i/(self.popsize-1.0)) for i in range(1, self.popsize-1)])
-        self.weight = np.array(self.weight)
+        self.weight = self.weight_generator(nobj=self.nobj, division=self.popsize)
         self.table = np.array([get_neighbor(i) for i in range(self.popsize)])
         # self.nobj = len(self.weight)    #nobjを可変に(nomura)
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
@@ -163,7 +161,7 @@ class MOEAD(object):
         '''
         if popsize:
             self.popsize = popsize
-            self.init_weight2d()
+            self.init_weight()
 
         population = Population(capacity=self.popsize, origin=self)
 
@@ -242,7 +240,7 @@ class MOEAD(object):
         ################################################################################
         # weight vector 
         ################################################################################
-    def weight_generator(self, nobj=None, popsize=None):
+    def weight_generator(self, nobj=None, divisions=None):
         '''
          任意の次元を持つ重みベクトルを作成
         '''
@@ -250,13 +248,13 @@ class MOEAD(object):
 
         if not nobj:
             nobj = self.nobj
-        if not popsize:
-            popsize = self.popsize
+        if not divisions:
+            divisions = self.popsize
         
         if nobj == 2:
             weights = [[1,0],[0,1]]
-            weights.extend([(i/(self.popsize-1.0), 1.0-i/(self.popsize-1.0)) 
-                                            for i in range(1, self.popsize-1)])
+            weights.extend([(i/(divisions-1.0), 1.0-i/(divisions-1.0)) 
+                                            for i in range(1, divisions-1)])
             weights = np.array(weights)
 
         else:
@@ -275,7 +273,7 @@ class MOEAD(object):
                         weight[idx] = float(i)/float(total)
                         weight_recursive(weights, weight, left-i, total, idx+1)
 
-            weight_recursive(weights, [0.0]*nobj, popsize, popsize)
+            weight_recursive(weights, [0.0]*nobj, divisions, divisions)
             weights = np.array(weights)
 
             # print(f"nobj={nobj}, popsize={popsize}")
