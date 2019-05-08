@@ -164,7 +164,10 @@ class MOEAD(object):
 
         population = Population(capacity=self.popsize, origin=self)
 
+        i = 0
         while not population.filled():
+            i+=1
+            print(f"indiv{i:>3d}", end=" ")
             indiv = creator()
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
@@ -184,6 +187,7 @@ class MOEAD(object):
         # select_it = iter(select_it) # Fixed
 
         for i in range(self.popsize):
+            print(f"indiv{i:>3d}", end=" ")
             child_fit = self.get_offspring(i, population, self.table[i],
                                            self.weight[i])
             next_population.append(child_fit)
@@ -239,7 +243,7 @@ class MOEAD(object):
         ################################################################################
         # weight vector 
         ################################################################################
-    def weight_generator(self, nobj=None, divisions=None):
+    def weight_generator(self, nobj=None, divisions=None, coeff=1):
         '''
          任意の次元を持つ重みベクトルを作成
         '''
@@ -249,6 +253,8 @@ class MOEAD(object):
             nobj = self.nobj
         if not divisions:
             divisions = self.popsize
+        if coeff:
+            divisions = divisions*coeff
         
         if nobj == 2:
             weights = [[1,0],[0,1]]
@@ -275,10 +281,8 @@ class MOEAD(object):
             weight_recursive(weights, [0.0]*nobj, divisions, divisions)
             weights = np.array(weights)
 
-            # print(f"nobj={nobj}, popsize={popsize}")
-            # print(ele_candidate)
-            # with open("temp.txt", "w") as f:
-            #     np.savetxt(f, weights, fmt='%.2f', delimiter='\t')
+
+        np.savetxt("temp.txt", weights, fmt='%.2f', delimiter='\t')
 
         return weights
         
