@@ -132,15 +132,38 @@ class MOEAD(object):
         if not self.popsize or not self.ksize:
             return
 
+        self.weight = self.weight_generator(nobj=self.nobj, divisions=self.popsize)
+        # self.weight = np.array([[i+1, self.popsize-i]
+        #                        for i in range(self.popsize)])
+
         def get_neighbor(index):
             imin = min(max(index-(self.ksize-1)//2, 0),
                        self.popsize-self.ksize)
             return list(range(imin, imin+self.ksize))
 
-        # self.weight = np.array([[i+1, self.popsize-i]
-        #                        for i in range(self.popsize)])
-        self.weight = self.weight_generator(nobj=self.nobj, divisions=self.popsize)
-        self.table = np.array([get_neighbor(i) for i in range(self.popsize)])
+        def get_neighbor2(index):
+            norms = np.zeros((self.weight.shape[0], self.weight.shape[1]+2))
+            self.neighbers = np.zeros((self.weight.shape[0], self.ksize))
+            w1 = self.weight[index]
+
+            for i, w2 in enumerate(self.weight):
+                norms[i,0] = np.linalg.norm(w1 - w2)
+                norms[i,1] = i
+                norms[i,2:] = w2
+            
+            norms_sort = norms[norms[:,0].argsort(),:]  #normの大きさでnormsをソート
+            # print(norms)
+            neighber_index = np.zeros((self.ksize), dtype="int")
+            for i in range(self.ksize):
+                neighber_index[i] = norms_sort[i,1]
+            
+            # print(neighber_index)
+            return neighber_index
+
+
+        self.table = np.array([get_neighbor2(i) for i in range(self.popsize)])
+        # print(self.table)  #for debug
+        # print(self.weight)  #for debug
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
 
     def update_reference(self, indiv):
@@ -167,7 +190,7 @@ class MOEAD(object):
         i = 0
         while not population.filled():
             i+=1
-            print(f"indiv{i:>3d}", end=" ")
+            print(f"indiv{i:>3d}", end="\r")
             indiv = creator()
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
@@ -187,7 +210,7 @@ class MOEAD(object):
         # select_it = iter(select_it) # Fixed
 
         for i in range(self.popsize):
-            print(f"indiv{i:>3d}", end=" ")
+            print(f"indiv{i:>3d}", end="\r")
             child_fit = self.get_offspring(i, population, self.table[i],
                                            self.weight[i])
             next_population.append(child_fit)
