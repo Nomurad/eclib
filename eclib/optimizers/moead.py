@@ -133,6 +133,8 @@ class MOEAD(object):
             return
 
         self.weight = self.weight_generator(nobj=self.nobj, divisions=self.popsize)
+        self.popsize = self.weight.shape[0]
+        print("popsize = ", self.popsize)
         # self.weight = np.array([[i+1, self.popsize-i]
         #                        for i in range(self.popsize)])
 
@@ -162,7 +164,7 @@ class MOEAD(object):
 
 
         self.table = np.array([get_neighbor2(i) for i in range(self.popsize)])
-        # print(self.table)  #for debug
+        print(self.table)  #for debug
         # print(self.weight)  #for debug
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
 
