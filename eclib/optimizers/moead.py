@@ -63,9 +63,9 @@ def scalar_weighted_sum(indiv, weight, ref_point):
     return -np.sum(weight * np.abs(indiv.wvalue - ref_point))
 
 def scalar_chebyshev(indiv, weight, ref_point):
-    print("weight ",weight.shape)
-    print("weight ",indiv.wvalue.shape)
-    print("weight ",ref_point.shape)
+    # print("weight ",weight.shape)
+    # print("indiv.wvalue ",indiv.wvalue.shape)
+    # print("ref_point ",ref_point.shape)
     return -np.max(weight * np.abs(indiv.wvalue - ref_point))
 
 def scalar_boundaryintersection(indiv, weight, ref_point):
