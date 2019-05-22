@@ -24,6 +24,7 @@ from eclib.operations import SimulatedBinaryCrossover
 from eclib.operations import PolynomialMutation
 from eclib.optimizers import NSGA2
 from eclib.optimizers import MOEAD
+from eclib.optimizers import NSGA2_para
 from eclib.base import Individual
 from eclib.base import Environment
 from eclib.base import Creator
@@ -55,12 +56,15 @@ def main(model, out):
 
         if model == 'moead':
             optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=10)
+            optimizer.weight_generator(nobj=4, divisions=50)
         elif model == 'nsga2':
             optimizer = NSGA2(problem=problem, pool=indiv_pool)
+        elif model == 'para':
+            optimizer = NSGA2_para(problem=problem, pool=indiv_pool)
+
         else:
             raise Exception('Unexpected model name')
 
-        optimizer.weight_generator(nobj=4, divisions=50)
         population = optimizer.init_population(creator, popsize=popsize)
         history = [population]
 
