@@ -93,8 +93,11 @@ class NSGA2(object):
 
         population = Population(capacity=self.popsize,
                                 origin=self)
-
+        
+        i = 0
         while not population.filled():
+            i += 1
+            print(f"indiv{i:>3d}", end="\r")
             indiv = creator()
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
@@ -113,7 +116,10 @@ class NSGA2(object):
         while not next_population.filled():
             parents_it = list(islice(select_it, self.n_parents)) # Fixed
 
+            i = 0
             for child in self.mate_it(parents_it):
+                i += 1
+                print(f"indiv{i:>3d}", end="\r")
                 child_fit = child.evaluate(self.problem)
                 next_population.append(child_fit)
 
