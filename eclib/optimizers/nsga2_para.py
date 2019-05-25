@@ -26,7 +26,7 @@ from operator import attrgetter, itemgetter
 
 from multiprocessing import Pool
 import multiprocessing as mp
-from mpi4py import MPI
+# from mpi4py import MPI
 # from mpi4py.futures import MPIPoolExecutor
 
 import numpy as np
@@ -111,19 +111,23 @@ class NSGA2_para(object):
         population = Population(capacity=self.popsize,
                                 origin=self)
 
-        # while not population.filled():
-        #     indiv = creator()
-        #     fitness = indiv.evaluate(self.problem)
-        #     population.append(fitness)
+        while not population.filled():
+            indiv = creator()
+            fitness = indiv.evaluate(self.problem)
+            population.append(fitness)
 
-        comm = MPI.COMM_WORLD
-        mpirank = comm.Get_rank()
-        size = comm.Get_size()
+        def eval_para(n_indiv):
+            indiv = creator()
+            fitness = indiv.evaluate(self.problem)
+            population.append(fitness)
 
-        status = MPI.Status()
-        print("status", status)
+        # comm = MPI.COMM_WORLD
+        # mpirank = comm.Get_rank()
+        # size = comm.Get_size()
 
-        # p = MyPool(mp.cpu_count())
+        # status = MPI.Status()
+        # print("status", status)
+
         # p.map(self.wrap_eval, [(creator,population)])
         p = Pool(int(mp.cpu_count()))
         tmplist = [(creator,population) for i in range(popsize)]
@@ -133,16 +137,9 @@ class NSGA2_para(object):
         for i in range(popsize):
             population.append(fitnesses[i])
 
-        self.calc_fitness(population)
-        return population
-
-    def adv_eval(self, select_it):
-        parents_it = list(islice(select_it, self.n_parents)) # Fixed
-
-        for child in self.mate_it(parents_it):
-            child_fit = child.evaluate(self.problem)
+        #     child_fit = child.evaluate(self.problem)
     
-        return child_fit
+        return population
 
     def wrap_adv_eval(self, args):
         return self.adv_eval(*args)
