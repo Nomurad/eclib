@@ -26,7 +26,7 @@ from operator import attrgetter, itemgetter
 
 from multiprocessing import Pool
 import multiprocessing as mp
-from mpi4py import MPI
+# from mpi4py import MPI
 # from mpi4py.futures import MPIPoolExecutor
 
 import numpy as np
@@ -109,15 +109,15 @@ class NSGA2_para(object):
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
 
-        comm = MPI.COMM_WORLD
-        mpirank = comm.Get_rank()
-        size = comm.Get_size()
+        # comm = MPI.COMM_WORLD
+        # mpirank = comm.Get_rank()
+        # size = comm.Get_size()
 
-        status = MPI.Status()
-        print("status", status)
+        # status = MPI.Status()
+        # print("status", status)
 
-        def map_mpi(func, tasks, callback=None):
-            ntask = len(tasks)
+        # def map_mpi(func, tasks, callback=None):
+        #     ntask = len(tasks)
             # if not 
         # p = Pool(int(mp.cpu_count()))
         # p.map(eval_para, list(range(self.popsize)))
