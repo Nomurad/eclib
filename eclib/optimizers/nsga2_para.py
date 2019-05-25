@@ -118,7 +118,7 @@ class NSGA2_para(object):
 
         def map_mpi(func, tasks, callback=None):
             ntask = len(tasks)
-            if not 
+            # if not 
         # p = Pool(int(mp.cpu_count()))
         # p.map(eval_para, list(range(self.popsize)))
 
