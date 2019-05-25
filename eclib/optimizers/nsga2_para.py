@@ -49,6 +49,8 @@ from ..operations import BlendCrossover
 from ..operations import SimulatedBinaryCrossover
 from ..operations import PolynomialMutation
 
+from .mypool import MyPool
+
 # default_selection = TournamentSelection(ksize=2)
 default_selection = TournamentSelectionStrict(ksize=2)
 # default_selection = TournamentSelectionDCD()
@@ -89,6 +91,16 @@ class NSGA2_para(object):
         next_population = self.advance(population)
         return self.alternate(population, next_population)
 
+    def init_eval(self, creator, population):
+        indiv = creator()
+        fitness = indiv.evaluate(self.problem)
+        # population.append(fitness)
+        return fitness
+        # return 100
+
+    def wrap_eval(self, args):
+        return self.init_eval(*args)
+
     def init_population(self, creator, popsize=None):
         ''' 初期集団生成
         '''
@@ -104,11 +116,6 @@ class NSGA2_para(object):
         #     fitness = indiv.evaluate(self.problem)
         #     population.append(fitness)
 
-        def eval_para(n_indiv):
-            indiv = creator()
-            fitness = indiv.evaluate(self.problem)
-            population.append(fitness)
-
         comm = MPI.COMM_WORLD
         mpirank = comm.Get_rank()
         size = comm.Get_size()
@@ -116,14 +123,29 @@ class NSGA2_para(object):
         status = MPI.Status()
         print("status", status)
 
-        def map_mpi(func, tasks, callback=None):
-            ntask = len(tasks)
-            if not 
-        # p = Pool(int(mp.cpu_count()))
-        # p.map(eval_para, list(range(self.popsize)))
+        # p = MyPool(mp.cpu_count())
+        # p.map(self.wrap_eval, [(creator,population)])
+        p = Pool(int(mp.cpu_count()))
+        tmplist = [(creator,population) for i in range(popsize)]
+        fitnesses = p.map(self.wrap_eval, tmplist)
+
+        # print(fitnesses)
+        for i in range(popsize):
+            population.append(fitnesses[i])
 
         self.calc_fitness(population)
         return population
+
+    def adv_eval(self, select_it):
+        parents_it = list(islice(select_it, self.n_parents)) # Fixed
+
+        for child in self.mate_it(parents_it):
+            child_fit = child.evaluate(self.problem)
+    
+        return child_fit
+
+    def wrap_adv_eval(self, args):
+        return self.adv_eval(*args)
 
     def advance(self, population):
         ''' 選択→交叉→突然変異→評価(→適応度計算→世代交代)
@@ -139,6 +161,14 @@ class NSGA2_para(object):
             for child in self.mate_it(parents_it):
                 child_fit = child.evaluate(self.problem)
                 next_population.append(child_fit)
+
+        # p = Pool(int(mp.cpu_count()))
+        # tmplist = [(select_it,) for i in range(self.popsize)]
+        # child_fits = p.map(self.wrap_adv_eval, tmplist)
+        # print(child_fits)
+
+        # for i in range(self.popsize):
+        #     next_population.append(child_fits[i])
 
         return next_population
 
