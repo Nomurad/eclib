@@ -104,8 +104,8 @@ class NSGA2(object):
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
 
-        if self.normalize_flag:
-            self.normalizing(population)
+        # if self.normalize_flag:
+        #     self.normalizing(population)
 
         self.calc_fitness(population)
         return population
@@ -173,7 +173,7 @@ class NSGA2(object):
             #     print('len(i==0):', len(front), ' ')
 
             if self.share_fn:
-                front = self.normalizing(front)
+                # front = self.normalizing(front)
                 it = self.share_fn(front)
                 try:
                     for fit, crowding in zip(front, it):
