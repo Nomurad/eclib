@@ -173,7 +173,7 @@ class NSGA2(object):
             #     print('len(i==0):', len(front), ' ')
 
             if self.share_fn:
-                front = self.normalization(front)
+                front = self.normalizing(front)
                 it = self.share_fn(front)
                 try:
                     for fit, crowding in zip(front, it):
