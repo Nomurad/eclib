@@ -64,18 +64,6 @@ class Population(object):
                 self.max_obj_val[i] = max(indiv.value[i], self.max_obj_val[i])
                 self.min_obj_val[i] = min(indiv.value[i], self.min_obj_val[i])
 
-            #     if indiv.value[i] > self.max_obj_val[i]:
-            #         self.max_obj_val[i] = indiv.value[i]
-            #     self.max_obj_val[i] = max(indiv.value[i], self.max_obj_val[i])
-
-            #     if indiv.value[i] < self.min_obj_val[i]:
-            #         self.min_obj_val[i] = indiv.value[i]
-        
-        # obj_range = max_obj_val - min_obj_val
-        # for i, indiv in enumerate(indivs):
-        #     indiv.wvalue = tuple((indiv.value-min_obj_val)/obj_range)
-            # indiv.wvalue = tuple(np.zeros(obj_dim))
-
         return self.max_obj_val, self.min_obj_val
 
     def normalizing(self, max_paras, min_paras):
@@ -90,3 +78,61 @@ class Population(object):
         for indiv in indivs:
             # indiv.wvalue = tuple((indiv.value-min_paras)/obj_range)
             indiv.wvalue = tuple((indiv.value)/obj_range)
+
+class Normalization(object):
+    # def __init__(self, population):
+    #     self.init_paras(population)
+
+    def __init__(self, population, max_ref=None, min_ref=None):
+        indivs = [indiv.data for indiv in population]
+        self.obj_dim = len(indivs[0])
+        self.max_obj_val = np.full(self.obj_dim, -np.inf)
+        self.min_obj_val = np.full(self.obj_dim, np.inf)
+
+        for indiv in population:
+            for i in range(self.obj_dim):
+                self.max_obj_val[i] = max(indiv.data.value[i], self.max_obj_val[i])
+                self.min_obj_val[i] = min(indiv.data.value[i], self.min_obj_val[i])
+
+        if max_ref is not None:
+            self.max_obj_val = max_ref
+        if min_ref is not None:
+            self.min_obj_val = min_ref
+
+        # print(self.max_obj_val , self.min_obj_val)
+        # self.obj_range = self.max_obj_val - self.min_obj_val
+        self.obj_range = self.max_obj_val
+
+    def update_para(self, population, max_ref=None, min_ref=None):
+        for indiv in population:
+            for i in range(self.obj_dim):
+                self.max_obj_val[i] = max(indiv.data.value[i], self.max_obj_val[i])
+                self.min_obj_val[i] = min(indiv.data.value[i], self.min_obj_val[i])
+                
+        # indivs_value = np.array([indiv.data.value for indiv in population])
+
+        # # print("indivs:", len(indivs_value) )
+        # for j in range(self.obj_dim):
+        #     self.max_obj_val[j] = max(indivs_value[:,j])
+        #     self.min_obj_val[j] = min(indivs_value[:,j])
+        print(self.max_obj_val, self.min_obj_val)
+
+        if max_ref is not None:
+            self.max_obj_val = max_ref
+        if min_ref is not None:
+            self.min_obj_val = min_ref
+
+        # print(self.max_obj_val , self.min_obj_val)
+        self.obj_range = self.max_obj_val - self.min_obj_val
+
+    def __call__(self, population, initial=False, **kwargs):
+        # if initial==False:
+        self.update_para(population, **kwargs)
+    
+        for i in range(len(population)):
+            population[i].data.wvalue = tuple((population[i].data.value-self.min_obj_val)/self.obj_range)
+            # population[i].data.wvalue = tuple((population[i].data.value)/self.max_obj_val)
+            # print(population[i].data.wvalue)
+        # print()
+
+        return population

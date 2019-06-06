@@ -18,12 +18,11 @@ class Individual(object):
     bounds = None # None or (low, up) or ([low], [up])
     weight = None # 重み(正=>最小化, 負=>最大化)
 
-    def __init__(self, genome, origin=None, normalization=False):
+    def __init__(self, genome, origin=None):
         self.genome = genome # 遺伝子型
         self.origin = origin # 派生元 (初期化関数又は関数と引数の組)
         self.value = None    # 評価値 (デフォルトではシーケンス型)
         self.wvalue = None   # 重み付き評価値
-        self.normalization = normalization #正規化フラグ
 
     def __getitem__(self, key):
         if self.value is None:
@@ -76,13 +75,20 @@ class Individual(object):
 
     def evaluate(self, function):
         if not self.evaluated():
+            # def func(*args, **kwargs):
+            #     return (function(*args, **kwargs),)
+
             self.function = function
             self.value = function(self.get_variable())
-            if self.normalization is False:
-                if self.weight is not None:
-                    self.wvalue = self.weight * self.value
-                else:
-                    self.wvalue = self.value
+            try:
+                len(self.value)
+            except:
+                self.value = (self.value,)  #単目的のとき，valueをタプルに変換
+
+            if self.weight is not None:
+                self.wvalue = self.weight * self.value
+            else:
+                self.wvalue = self.value
 
         return Fitness(self)
 

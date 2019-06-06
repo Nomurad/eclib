@@ -28,6 +28,7 @@ from eclib.optimizers import NSGA2_para
 from eclib.base import Individual
 from eclib.base import Environment
 from eclib.base import Creator
+from eclib.base.population import Normalization
 
 import myutils as ut 
 
@@ -39,7 +40,8 @@ class Problem():
         return self.problem(x)
 
     def problem(self, x):
-        return zdt2(x)
+        return zdt1(x)
+        # return rosenbrock(x)
 
 
 def main(model, out):
@@ -55,10 +57,12 @@ def main(model, out):
         creator = Creator(initializer, indiv_pool)
 
         if model == 'moead':
-            optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=10)
+            optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=5, normalization=True)
             optimizer.weight_generator(nobj=4, divisions=50)
+            popsize = int(popsize)
+            epoch = epoch*3
         elif model == 'nsga2':
-            optimizer = NSGA2(problem=problem, pool=indiv_pool, normalize_flag=True)
+            optimizer = NSGA2(problem=problem, pool=indiv_pool, normalization=True)
         elif model == 'para':
             optimizer = NSGA2_para(problem=problem, pool=indiv_pool)
 
@@ -132,7 +136,7 @@ def plt_result(out):
 
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(1,1,1)
-    ax.set_ylim(0,3.0)
+    # ax.set_ylim(0,3.0)
     cm = plt.get_cmap("Blues")
     sc = ax.scatter( datas[:,-2], datas[:, -1], c=datas[:,0], cmap=cm)
     plt.colorbar(sc)
@@ -144,26 +148,34 @@ def __test__(out, model='nsga2'):
     # env = M.Optimize_ENV(model, popsize=len(history[0]), ksize=5).env
     # population = env.optimizer.init_population(env.creator, popsize=5)
     population = history[-1]
-    # population.normalizing()
+    normalizing = Normalization(population)
+    norm = normalizing(population, max_ref=np.array([1,1]))
+    print(normalizing.max_obj_val, normalizing.min_obj_val)
 
-    fits = population.data
-    indivs = [indiv.data for indiv in fits]
-    obj_dim = len(indivs[0].value)
-    for i, indiv in enumerate(indivs):
-        for j in range(obj_dim):
-            print( f'{indiv.value[j]:>13.3f}', end=" ")
-        print("| ", end=" ")
-        for j in range(obj_dim):
-            print( f'{indiv.wvalue[j]:>7.4f}', end=" ")
-            
-        print(f'{fits[i].rank}')
+    # fits = population.data
+    # indivs = [indiv.data for indiv in fits]
+    # obj_dim = len(indivs[0].value)
+    # for i, indiv in enumerate(indivs):
+    #     for j in range(obj_dim):
+    #         print( f'{indiv.value[j]:>13.3f}', end=" ")
+    #     print("| ", end=" ")
+    #     for j in range(obj_dim):
+    #         print( f'{indiv.wvalue[j]:>7.3f}', end=" ")
+        
+    #     norm = normalizing(population, max_ref=np.array([1,1]))
+    #     print(f'{normalizing.max_obj_val}')
+        # print(f'{fits[i].value},{fits[i].rank}')
+    
+    for pop in history:
+        normalizing(pop)
+        print(normalizing.max_obj_val, normalizing.min_obj_val)
 
 
 def get_args():
     '''
     docstring for get_args.
     '''
-    default_optimizer = 'nsga2'
+    default_optimizer = 'moead'
 
     parser = argparse.ArgumentParser()
     parser.add_argument('method', nargs='?', default='',

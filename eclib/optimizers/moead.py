@@ -29,6 +29,7 @@ import numpy as np
 
 from ..base import Individual
 from ..base import Population
+from ..base.population import Normalization
 from ..base import NondominatedSortIterator
 from ..base import CrowdingDistanceCalculator
 # from ..operations import SelectionIterator
@@ -91,6 +92,7 @@ class MOEAD(object):
                  selection=default_selection,
                  crossover=default_crossover,
                  mutation=default_mutation,
+                 normalization=False,
                  n_obj=2):
         self.popsize = popsize
         self.ksize = ksize
@@ -99,6 +101,7 @@ class MOEAD(object):
         self.nobj = int(n_obj)
         print("set nobj = ",self.nobj)
         self.scalar = scalar
+        self.normalization = normalization
 
         self.n_parents = 2       # 1回の交叉の親個体の数
         self.n_cycle = 2         # 選択候補をリセットする周期(n_parentsの倍数にすること)
@@ -122,7 +125,15 @@ class MOEAD(object):
             self.init_weight()
             population.sort(key=attrgetter('data'))
 
+        if self.normalization:
+            # population = self.normalizing(population, max_ref=np.array([1,1]))
+            population = self.normalizing(population)
+        # else:
+        #     for fit in population:
+        #         print(fit.data.wvalue)
+
         next_population = self.advance(population)
+
         return self.alternate(population, next_population)
 
     def init_weight(self, popsize=None, ksize=None):
@@ -137,7 +148,7 @@ class MOEAD(object):
 
         self.weight = self.weight_generator(nobj=self.nobj, divisions=self.popsize)
         self.popsize = self.weight.shape[0]
-        print("popsize = ", self.popsize)
+        print("popsize = ", len(self.weight))
         # self.weight = np.array([[i+1, self.popsize-i]
         #                        for i in range(self.popsize)])
 
@@ -199,6 +210,12 @@ class MOEAD(object):
             indiv = creator()
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
+
+        if self.normalization:
+            self.normalizing = Normalization(population)
+            # population = self.normalizing(population, max_ref=np.array([1,1]))
+            # population = self.normalizing(population)
+
 
         # self.calc_fitness(population)
         # self.weight = np.array([[i ,w] for i,w in zip(range(self.popsize), population[0].data.wvalue)])
