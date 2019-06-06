@@ -288,8 +288,6 @@ class MOEAD(object):
             weights = [[1,0],[0,1]]
             weights.extend([(i/(divisions-1.0), 1.0-i/(divisions-1.0)) 
                                             for i in range(1, divisions-1)])
-            weights = np.array(weights)
-
         else:
             weights = []
             # ele_candidate = np.array(list(range(popsize+1)))/popsize
@@ -300,18 +298,15 @@ class MOEAD(object):
                     weight[idx] = float(left)/float(total)
                     weights.append(copy.copy(weight))
                     # return weights
-
                 else:
                     for i in range(left+1):
                         weight[idx] = float(i)/float(total)
                         weight_recursive(weights, weight, left-i, total, idx+1)
 
             weight_recursive(weights, [0.0]*nobj, divisions, divisions)
-            weights = np.array(weights)
 
-
-        np.savetxt("temp.txt", weights, fmt='%.2f', delimiter='\t')
-
+        weights = np.array(weights)
+        # np.savetxt("temp.txt", weights, fmt='%.2f', delimiter='\t')
         return weights
         
 
