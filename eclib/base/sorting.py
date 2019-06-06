@@ -116,10 +116,13 @@ class CrowdingDistanceCalculator(object):
     def __init__(self, key=identity):
         self.key = key
 
-    def __call__(self, population):
+    def __call__(self, population, normalization=False):
         popsize = len(population)
         if popsize == 0:
             return
+        if normalization:
+            Population(Population)
+            population.normalizing(*population.normalize_para())
 
         distances = np.zeros(popsize, dtype=np.float32)
 
@@ -147,3 +150,31 @@ class CrowdingDistanceCalculator(object):
                 distances[c] += (get_value(r) - get_value(l)) / norm
 
         return distances
+
+class Normalization(object):
+    def __init__(self):
+        self.max_obj_val = None
+        self.min_obj_val = None
+
+    def init_paras(self, population):
+        indivs = [indiv.data for indiv in self.data]
+        obj_dim = len(indivs[0].value)
+        if self.max_obj_val == None and self.min_obj_val == None:
+            self.max_obj_val = np.full(obj_dim, -np.inf)
+            self.min_obj_val = np.full(obj_dim, np.inf)
+
+        for indivs in population:
+            for indiv in indivs:
+                self.max_obj_val[i] = max(indiv.value[i], self.max_obj_val[i])
+                self.min_obj_val[i] = min(indiv.value[i], self.min_obj_val[i])
+
+        self.obj_range = max_paras - min_paras
+
+    def __call__(self, population):
+        
+        for indivs in population:
+            for indiv in indivs:
+                indiv.data.wvalue = tuple((indiv.data.value)/self.obj_range)
+
+        return population
+

@@ -39,13 +39,13 @@ class Problem():
         return self.problem(x)
 
     def problem(self, x):
-        return zdt1(x)
+        return zdt2(x)
 
 
 def main(model, out):
     n_dim = 10
-    popsize = 100
-    epoch = 300
+    popsize = 40
+    epoch = 100
 
     problem = Problem()
 
@@ -58,7 +58,7 @@ def main(model, out):
             optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=10)
             optimizer.weight_generator(nobj=4, divisions=50)
         elif model == 'nsga2':
-            optimizer = NSGA2(problem=problem, pool=indiv_pool)
+            optimizer = NSGA2(problem=problem, pool=indiv_pool, normalize_flag=True)
         elif model == 'para':
             optimizer = NSGA2_para(problem=problem, pool=indiv_pool)
 
@@ -75,7 +75,7 @@ def main(model, out):
             history.append(population)
 
             if i == epoch:
-                file = f'popsize{popsize}_epoch{epoch}_{ut.strnow("%Y%m%d_%H%M")}.pkl'
+                file = f'popsize{popsize}_epoch{epoch}_{ut.strnow("%Y%m%d_%H%M%S")}.pkl'
                 file = os.path.join(out, file)
                 if not os.path.exists(out):
                     os.makedirs(out)
@@ -132,21 +132,43 @@ def plt_result(out):
 
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(1,1,1)
+    ax.set_ylim(0,3.0)
     cm = plt.get_cmap("Blues")
     sc = ax.scatter( datas[:,-2], datas[:, -1], c=datas[:,0], cmap=cm)
     plt.colorbar(sc)
 
     plt.show()
 
+def __test__(out, model='nsga2'):
+    env,opt,history = get_model(out)
+    # env = M.Optimize_ENV(model, popsize=len(history[0]), ksize=5).env
+    # population = env.optimizer.init_population(env.creator, popsize=5)
+    population = history[-1]
+    # population.normalizing()
+
+    fits = population.data
+    indivs = [indiv.data for indiv in fits]
+    obj_dim = len(indivs[0].value)
+    for i, indiv in enumerate(indivs):
+        for j in range(obj_dim):
+            print( f'{indiv.value[j]:>13.3f}', end=" ")
+        print("| ", end=" ")
+        for j in range(obj_dim):
+            print( f'{indiv.wvalue[j]:>7.4f}', end=" ")
+            
+        print(f'{fits[i].rank}')
+
 
 def get_args():
     '''
     docstring for get_args.
     '''
+    default_optimizer = 'nsga2'
+
     parser = argparse.ArgumentParser()
     parser.add_argument('method', nargs='?', default='',
                         help='Main method type')
-    parser.add_argument('--model', '-m', default='moead',
+    parser.add_argument('--model', '-m', default=default_optimizer,
                         help='Model type')
     parser.add_argument('--out', '-o', default='',
                         help='Filename of the new script')
@@ -168,6 +190,8 @@ if __name__ == "__main__":
 
     if args.method == 'r':
         plt_result(out)
+    elif args.test:
+        __test__(out)
     else:
         print("run test script.")
         main(model ,out)

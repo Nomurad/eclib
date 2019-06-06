@@ -30,6 +30,7 @@ from ..base import Individual
 from ..base import Population
 from ..base import NondominatedSortIterator
 from ..base import CrowdingDistanceCalculator
+from ..base.sorting import Normalization
 from .iterators import SelectionIterator
 from .iterators import MatingIterator
 
@@ -59,16 +60,20 @@ class NSGA2(object):
     '''
     name = 'NSGA-II'
 
-    def __init__(self, popsize=None, problem=None, pool=None,
+    def __init__(self, popsize=None, problem=None, pool=None, normalize_flag=False,
                  selection=default_selection,
                  crossover=default_crossover,
                  mutation=default_mutation):
         self.popsize = popsize
         self.problem = problem
+        self.normalize_flag = normalize_flag
+        self.normalize_para = None
+        if self.normalize_flag:
+            self.normalizing = Normalization()
 
         self.n_parents = 2        # 1回の交叉の親個体の数
         self.n_cycle = 2          # 選択候補をリセットする周期(n_parentsの倍数にすること)
-        self.alternation = 'join' # 世代交代方法
+        self.alternation = 'join' # 世代交代方法[replace , join]
 
         self.select_it = SelectionIterator(selection=selection, pool=pool)
         self.mate_it = MatingIterator(crossover=crossover,
@@ -99,6 +104,9 @@ class NSGA2(object):
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
 
+        if self.normalize_flag:
+            self.normalizing(population)
+
         self.calc_fitness(population)
         return population
 
@@ -121,15 +129,24 @@ class NSGA2(object):
 
     def alternate(self, population, next_population):
         ''' 適応度計算 → 世代交代
-        1. 親世代を子世代で置き換える
-        2. 親世代と子世代の和からランクを求める
+        1. [replace] 親世代を子世代で置き換える
+        2. [join] 親世代と子世代の和からランクを求める
         '''
         if self.alternation == 'replace':
+            if self.normalize_flag:
+                next_population.normalizing(*next_population.normalize_para())
             self.calc_fitness(next_population)
             return next_population
 
         elif self.alternation == 'join':
             joined = population + next_population
+
+            # joined = Population(joined)
+            # if self.normalize_flag:
+            #     normalize_para = joined.normalize_para()
+            #     joined.normalizing(*normalize_para)
+            #     print((normalize_para))
+
             next_population = self.calc_fitness(joined, n=self.popsize)
             # print([fit.data.id for fit in next_population])
             # exit()
@@ -156,6 +173,7 @@ class NSGA2(object):
             #     print('len(i==0):', len(front), ' ')
 
             if self.share_fn:
+                front = self.normalization(front)
                 it = self.share_fn(front)
                 try:
                     for fit, crowding in zip(front, it):
