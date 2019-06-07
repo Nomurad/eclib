@@ -128,11 +128,15 @@ class MOEAD(object):
         if self.normalization:
             # population = self.normalizing(population, max_ref=np.array([1,1]))
             population = self.normalizing(population)
+            for fits in population:
+                self.update_reference(fits.data)
+                # print(fits.data.wvalue, fits.value)
         # else:
         #     for fit in population:
         #         print(fit.data.wvalue)
 
         next_population = self.advance(population)
+        print(self.ref_point)
 
         return self.alternate(population, next_population)
 
@@ -248,6 +252,7 @@ class MOEAD(object):
         交叉，突然変異を行い最良個体を1つ返す
         * 2018.11.21 新しい解が古い解より良い場合に置き換える処理に変更
         '''
+        
         subpopulation = [population[i] for i in table]
 
         for i, fit in enumerate(subpopulation):

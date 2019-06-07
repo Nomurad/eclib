@@ -40,13 +40,14 @@ class Problem():
         return self.problem(x)
 
     def problem(self, x):
-        return zdt1(x)
+        # return x[0], x[0]**2
+        return zdt3(x)
         # return rosenbrock(x)
 
 
 def main(model, out):
     n_dim = 10
-    popsize = 40
+    popsize = 30
     epoch = 100
 
     problem = Problem()
@@ -60,7 +61,7 @@ def main(model, out):
             optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=5, normalization=True)
             optimizer.weight_generator(nobj=4, divisions=50)
             popsize = int(popsize)
-            epoch = epoch*3
+            epoch = epoch
         elif model == 'nsga2':
             optimizer = NSGA2(problem=problem, pool=indiv_pool, normalization=True)
         elif model == 'para':
