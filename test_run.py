@@ -41,14 +41,15 @@ class Problem():
 
     def problem(self, x):
         # return x[0], x[0]**2
-        return zdt3(x)
+        x,y = zdt1(x)
+        return x, y
         # return rosenbrock(x)
 
 
 def main(model, out):
     n_dim = 10
     popsize = 30
-    epoch = 100
+    epoch = 100*5
 
     problem = Problem()
 
@@ -70,6 +71,7 @@ def main(model, out):
         else:
             raise Exception('Unexpected model name')
 
+        # indiv_pool.cls.set_weight([1, -1])
         population = optimizer.init_population(creator, popsize=popsize)
         history = [population]
 
@@ -148,7 +150,7 @@ def __test__(out, model='nsga2'):
     env,opt,history = get_model(out)
     # env = M.Optimize_ENV(model, popsize=len(history[0]), ksize=5).env
     # population = env.optimizer.init_population(env.creator, popsize=5)
-    population = history[-1]
+    population = history[0]
     normalizing = Normalization(population)
     norm = normalizing(population, max_ref=np.array([1,1]))
     print(normalizing.max_obj_val, normalizing.min_obj_val)
@@ -167,9 +169,13 @@ def __test__(out, model='nsga2'):
     #     print(f'{normalizing.max_obj_val}')
         # print(f'{fits[i].value},{fits[i].rank}')
     
-    for pop in history:
-        normalizing(pop)
-        print(normalizing.max_obj_val, normalizing.min_obj_val)
+    for i,pop in enumerate(history):
+        if i%10 == 0:
+            normalizing(pop)
+            normalizing.update_para(pop)
+            print(i,normalizing.max_obj_val, normalizing.min_obj_val)
+            # print(i, (pop.max_val()), pop.min_val())
+            
 
 
 def get_args():

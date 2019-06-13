@@ -44,6 +44,22 @@ class Population(object):
     def filled(self):
         return self.capacity and len(self.data) >= self.capacity
 
+    def max_val(self):
+        pop_values = np.array([data.data.value for data in self.data])
+        max_values = []
+        for i in range(pop_values.shape[-1]):
+            max_values.append( max(pop_values[i]) )
+        
+        return max_values
+
+    def min_val(self):
+        pop_values = np.array([data.data.value for data in self.data])
+        min_values = []
+        for i in range(pop_values.shape[-1]):
+            min_values.append( min(pop_values[i]) )
+        
+        return min_values
+
     def normalize_para(self):
         fits = self.data
         indivs = [indiv.data for indiv in fits]
@@ -86,15 +102,25 @@ class Normalization(object):
     def __init__(self, population, max_ref=None, min_ref=None):
         indivs = [indiv.data for indiv in population]
         self.obj_dim = len(indivs[0])
-        # self.max_obj_val = np.full(self.obj_dim, -np.inf)
-        # self.min_obj_val = np.full(self.obj_dim, np.inf)
-        self.max_obj_val = -np.inf
-        self.min_obj_val = np.inf
+        self.max_obj_val = np.full(self.obj_dim, -np.inf)
+        self.min_obj_val = np.full(self.obj_dim, np.inf)
+        self.weights = None
+        # self.max_obj_val = -np.inf
+        # self.min_obj_val = np.inf
+        indivs_value = np.array([indiv.data.value for indiv in population])
 
-        for indiv in population:
+        # weight_bool = (np.array(population[0].data.wvalue)*np.array(population[0].data.value) < 0)
+        # self.weights = np.zeros(len(weight_bool))
+        # for i in range(self.obj_dim):
+        #     self.weights[i] = (-1 if weight_bool[i]==True else 1)
+        # print((self.weights))
+
+        for fit in population:
             for i in range(self.obj_dim):
-                self.max_obj_val = max(indiv.data.value[i], self.max_obj_val)
-                self.min_obj_val = min(indiv.data.value[i], self.min_obj_val)
+                data_value = fit.data.value[i]
+
+                self.max_obj_val[i] = max((data_value), (self.max_obj_val[i]))
+                self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
 
         if max_ref is not None:
             self.max_obj_val = max_ref
@@ -102,25 +128,24 @@ class Normalization(object):
             self.min_obj_val = min_ref
 
         # print(self.max_obj_val , self.min_obj_val)
-        # self.obj_range = self.max_obj_val - self.min_obj_val
-        self.obj_range = self.max_obj_val
+        self.obj_range = self.max_obj_val - self.min_obj_val
 
     def update_para(self, population, max_ref=None, min_ref=None):
-        self.max_obj_val = -np.inf
-        self.min_obj_val = np.inf
+        # self.max_obj_val = np.full(self.obj_dim, -np.inf)
+        # self.min_obj_val = np.full(self.obj_dim, np.inf)
 
         indivs_value = np.array([indiv.data.value for indiv in population])
 
-        # # print("indivs:", len(indivs_value) )
-        # for j in range(self.obj_dim):
-        #     self.max_obj_val[j] = max(indivs_value[:,j])
-        #     self.min_obj_val[j] = min(indivs_value[:,j])
+        # print("indivs:", len(indivs_value) )
+        for i in range(self.obj_dim):
+            self.max_obj_val[i] = max(indivs_value[:,i])
+            self.min_obj_val[i] = min(indivs_value[:,i])
 
 
-        for indiv in population:
-            for i in range(self.obj_dim):
-                self.max_obj_val = max(np.min(indivs_value), self.max_obj_val)
-                self.min_obj_val = min(np.max(indivs_value), self.min_obj_val)
+        # for indiv in population:
+        #     for i in range(self.obj_dim):
+        #         self.max_obj_val = max(np.max(indivs_value), self.max_obj_val)
+        #         self.min_obj_val = min(np.min(indivs_value), self.min_obj_val)
                 
 
         if max_ref is not None:
@@ -128,16 +153,16 @@ class Normalization(object):
         if min_ref is not None:
             self.min_obj_val = min_ref
 
-        print("max & min:",self.max_obj_val , self.min_obj_val)
+        # print("max & min:",self.max_obj_val , self.min_obj_val)
         self.obj_range = self.max_obj_val - self.min_obj_val
 
     def __call__(self, population, initial=False, **kwargs):
         # if initial==False:
-        self.update_para(population, **kwargs)
+        # self.update_para(population, **kwargs)
     
         for i in range(len(population)):
-            population[i].data.wvalue = tuple((population[i].data.value-self.min_obj_val)/self.obj_range)
-            # population[i].data.wvalue = tuple((population[i].data.value)/self.max_obj_val)
+            # population[i].data.wvalue = tuple((population[i].data.value-self.min_obj_val)/self.obj_range)
+            population[i].data.wvalue = tuple((population[i].data.value)/self.max_obj_val*1)
             # print(population[i].data.wvalue)
         # print()
 

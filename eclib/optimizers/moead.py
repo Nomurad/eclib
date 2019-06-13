@@ -136,7 +136,7 @@ class MOEAD(object):
         #         print(fit.data.wvalue)
 
         next_population = self.advance(population)
-        print(self.ref_point)
+        # print("ref point ",self.ref_point)
 
         return self.alternate(population, next_population)
 
@@ -189,7 +189,7 @@ class MOEAD(object):
     def update_reference(self, indiv):
         try:
             self.ref_point = np.min([self.ref_point, np.array(indiv.wvalue)],axis=0)
-            # print("updata ref point = ", self.ref_point)
+            # print("update ref point = ", self.ref_point)
         except:
             print(self.ref_point.dtype)
             print(self.ref_point)
@@ -218,7 +218,7 @@ class MOEAD(object):
         if self.normalization:
             self.normalizing = Normalization(population)
             # population = self.normalizing(population, max_ref=np.array([1,1]))
-            # population = self.normalizing(population)
+            population = self.normalizing(population)
 
 
         # self.calc_fitness(population)
@@ -226,6 +226,7 @@ class MOEAD(object):
         # self.weight = np.array([population[i].data.wvalue for i in (range(self.popsize))])
 
         self.ref_point = np.min([fit.data.wvalue for fit in population], axis=0)
+        print(self.ref_point)
         return population
 
     def advance(self, population):
