@@ -80,10 +80,8 @@ class Individual(object):
 
             self.function = function
             self.value = function(self.get_variable())
-            try:
-                len(self.value)
-            except:
-                self.value = (self.value,)  #単目的のとき，valueをタプルに変換
+            self.value = np.array(self.value)
+            # len(self.value)
 
             if self.weight is not None:
                 self.wvalue = self.weight * self.value

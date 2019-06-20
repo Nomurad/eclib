@@ -12,13 +12,16 @@ class Population(object):
             self.data = data.data
             self.capacity = capacity or data.capacity
             self.origin = origin or data.origin
+            self.max_obj_val = data.max_obj_val
+            self.min_obj_val = data.min_obj_val
         else:
             self.data = data or []
             self.capacity = capacity
             self.origin = origin
-
-        self.max_obj_val = None
-        self.min_obj_val = None
+            self.max_obj_val = -1
+            self.min_obj_val = 1
+        
+        # self.normalize_para()
 
     def __getitem__(self, key):
         return self.data[key]
@@ -66,13 +69,12 @@ class Population(object):
         
         if indivs[0].evaluated():
             # n_dim = len(indivs[0].get_variable())
-            obj_dim = len(indivs[0].value)
+            obj_dim = len(indivs[0].wvalue)
         else:
             raise("Indiv has not been evaluated yet.")
-    
-        if self.max_obj_val == None and self.min_obj_val == None:
-            self.max_obj_val = np.full(obj_dim, -np.inf)
-            self.min_obj_val = np.full(obj_dim, np.inf)
+            
+        self.max_obj_val = np.full(obj_dim, -np.inf)
+        self.min_obj_val = np.full(obj_dim, np.inf)
         # normalized_value = np.zeros( (len(indivs), obj_dim) )
 
         for indiv in indivs:
@@ -82,10 +84,15 @@ class Population(object):
 
         return self.max_obj_val, self.min_obj_val
 
-    def normalizing(self, max_paras, min_paras):
-        indivs = [indiv.data for indiv in self.data]
+    def normalizing(self, max_paras=None, min_paras=None):
+        indivs = [fit.data for fit in self.data]
         # obj_range = max_paras - min_paras
-        obj_range = max_paras
+        if max_paras==None:
+            max_paras = self.max_obj_val
+        if min_paras==None:
+            min_paras = self.min_obj_val
+        
+        obj_range = max_paras - min_paras
 
         if not indivs[0].evaluated():
             
@@ -93,7 +100,7 @@ class Population(object):
 
         for indiv in indivs:
             # indiv.wvalue = tuple((indiv.value-min_paras)/obj_range)
-            indiv.wvalue = tuple((indiv.value)/obj_range)
+            indiv.wvalue = np.array((indiv.wvalue)/obj_range)
 
 class Normalization(object):
     # def __init__(self, population):
@@ -105,20 +112,11 @@ class Normalization(object):
         self.max_obj_val = np.full(self.obj_dim, -np.inf)
         self.min_obj_val = np.full(self.obj_dim, np.inf)
         self.weights = None
-        # self.max_obj_val = -np.inf
-        # self.min_obj_val = np.inf
-        indivs_value = np.array([indiv.data.value for indiv in population])
-
-        # weight_bool = (np.array(population[0].data.wvalue)*np.array(population[0].data.value) < 0)
-        # self.weights = np.zeros(len(weight_bool))
-        # for i in range(self.obj_dim):
-        #     self.weights[i] = (-1 if weight_bool[i]==True else 1)
-        # print((self.weights))
+        indivs_value = np.array([indiv.data.wvalue for indiv in population])
 
         for fit in population:
             for i in range(self.obj_dim):
                 data_value = fit.data.value[i]
-
                 self.max_obj_val[i] = max((data_value), (self.max_obj_val[i]))
                 self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
 
@@ -137,17 +135,15 @@ class Normalization(object):
         indivs_value = np.array([indiv.data.value for indiv in population])
 
         # print("indivs:", len(indivs_value) )
-        for i in range(self.obj_dim):
-            self.max_obj_val[i] = max(indivs_value[:,i])
-            self.min_obj_val[i] = min(indivs_value[:,i])
-
-
-        # for indiv in population:
-        #     for i in range(self.obj_dim):
-        #         self.max_obj_val = max(np.max(indivs_value), self.max_obj_val)
-        #         self.min_obj_val = min(np.min(indivs_value), self.min_obj_val)
+        # for i in range(self.obj_dim):
+        #     self.max_obj_val[i] = max(indivs_value[:,i])
+        #     self.min_obj_val[i] = min(indivs_value[:,i])
+        for fit in population:
+            for i in range(self.obj_dim):
+                data_value = fit.data.value[i]
+                self.max_obj_val[i] = max((data_value), (self.max_obj_val[i]))
+                self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
                 
-
         if max_ref is not None:
             self.max_obj_val = max_ref
         if min_ref is not None:
@@ -157,13 +153,12 @@ class Normalization(object):
         self.obj_range = self.max_obj_val - self.min_obj_val
 
     def __call__(self, population, initial=False, **kwargs):
-        # if initial==False:
-        # self.update_para(population, **kwargs)
-    
-        for i in range(len(population)):
-            # population[i].data.wvalue = tuple((population[i].data.value-self.min_obj_val)/self.obj_range)
-            population[i].data.wvalue = tuple((population[i].data.value)/self.max_obj_val*1)
-            # print(population[i].data.wvalue)
-        # print()
+        if initial == False:
+            self.update_para(population, **kwargs)
 
+        for i in range(len(population)):
+            population[i].data.wvalue = ((population[i].data.value-self.min_obj_val)/self.obj_range)
+            # population[i].data.wvalue = ((population[i].data.value)/self.max_obj_val)
+            # print(type(population[i].data.wvalue))
+    
         return population

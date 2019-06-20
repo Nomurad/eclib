@@ -128,15 +128,18 @@ class MOEAD(object):
         if self.normalization:
             # population = self.normalizing(population, max_ref=np.array([1,1]))
             population = self.normalizing(population)
+            # population.normalize_para()
+            # population.normalizing()
             for fits in population:
                 self.update_reference(fits.data)
+                fit_value = self.scalar(fit.data, self.weight, self.ref_point)
+                fit.set_fitness((fit_value,), 1)
                 # print(fits.data.wvalue, fits.value)
-        # else:
-        #     for fit in population:
-        #         print(fit.data.wvalue)
 
         next_population = self.advance(population)
-        # print("ref point ",self.ref_point)
+        for fit in next_population:
+            fit_value = self.scalar(fit.data, self.weight, self.ref_point)
+            fit.set_fitness((fit_value, ),1)
 
         return self.alternate(population, next_population)
 
@@ -217,8 +220,9 @@ class MOEAD(object):
 
         if self.normalization:
             self.normalizing = Normalization(population)
-            # population = self.normalizing(population, max_ref=np.array([1,1]))
             population = self.normalizing(population)
+            # population.normalize_para()
+            # population.normalizing()
 
 
         # self.calc_fitness(population)
@@ -226,6 +230,7 @@ class MOEAD(object):
         # self.weight = np.array([population[i].data.wvalue for i in (range(self.popsize))])
 
         self.ref_point = np.min([fit.data.wvalue for fit in population], axis=0)
+        # print(self.normalizing.max_obj_val)
         print(self.ref_point)
         return population
 
@@ -237,7 +242,7 @@ class MOEAD(object):
         # select_it = iter(select_it) # Fixed
 
         for i in range(self.popsize):
-            print(f"indiv{i:>3d}", end="\r")
+            # print(f"indiv{i:>3d}", end="\r")
             child_fit = self.get_offspring(i, population, self.table[i],
                                            self.weight[i])
             next_population.append(child_fit)
@@ -307,26 +312,26 @@ class MOEAD(object):
         if coeff:
             divisions = divisions*coeff
         
-        if nobj == 2:
-            weights = [[1,0],[0,1]]
-            weights.extend([(i/(divisions-1.0), 1.0-i/(divisions-1.0)) 
-                                            for i in range(1, divisions-1)])
-        else:
-            weights = []
-            # ele_candidate = np.array(list(range(popsize+1)))/popsize
+        # if nobj == 2:
+        #     weights = [[1,0],[0,1]]
+        #     weights.extend([(i/(divisions-1.0), 1.0-i/(divisions-1.0)) 
+        #                                     for i in range(1, divisions-1)])
+        # else:
+        weights = []
+        # ele_candidate = np.array(list(range(popsize+1)))/popsize
 
-            def weight_recursive(weights, weight, left, total, idx=0):
+        def weight_recursive(weights, weight, left, total, idx=0):
 
-                if idx == nobj-1:
-                    weight[idx] = float(left)/float(total)
-                    weights.append(copy.copy(weight))
-                    # return weights
-                else:
-                    for i in range(left+1):
-                        weight[idx] = float(i)/float(total)
-                        weight_recursive(weights, weight, left-i, total, idx+1)
+            if idx == nobj-1:
+                weight[idx] = float(left)/float(total)
+                weights.append(copy.copy(weight))
+                # return weights
+            else:
+                for i in range(left+1):
+                    weight[idx] = float(i)/float(total)
+                    weight_recursive(weights, weight, left-i, total, idx+1)
 
-            weight_recursive(weights, [0.0]*nobj, divisions, divisions)
+        weight_recursive(weights, [0.0]*nobj, divisions, divisions)
 
         weights = np.array(weights)
         # np.savetxt("temp.txt", weights, fmt='%.2f', delimiter='\t')

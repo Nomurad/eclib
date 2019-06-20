@@ -11,3 +11,4 @@ result/
 .vs/
 test_result/
 temp.txt
+temp.json
