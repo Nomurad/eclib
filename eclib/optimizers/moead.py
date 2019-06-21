@@ -130,8 +130,8 @@ class MOEAD(object):
             population = self.normalizing(population)
             # population.normalize_para()
             # population.normalizing()
-            for fits in population:
-                self.update_reference(fits.data)
+            for fit in population:
+                self.update_reference(fit.data)
                 fit_value = self.scalar(fit.data, self.weight, self.ref_point)
                 fit.set_fitness((fit_value,), 1)
                 # print(fits.data.wvalue, fits.value)
