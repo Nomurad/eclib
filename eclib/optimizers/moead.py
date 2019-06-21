@@ -64,9 +64,6 @@ def scalar_weighted_sum(indiv, weight, ref_point):
     return -np.sum(weight * np.abs(indiv.wvalue - ref_point))
 
 def scalar_chebyshev(indiv, weight, ref_point):
-    # print("weight ",weight.shape)
-    # print("indiv.wvalue ",indiv.wvalue.shape)
-    # print("ref_point ",ref_point.shape)
     return -np.max(weight * np.abs(indiv.wvalue - ref_point))
 
 def scalar_boundaryintersection(indiv, weight, ref_point):
@@ -130,11 +127,6 @@ class MOEAD(object):
             population = self.normalizing(population)
             # population.normalize_para()
             # population.normalizing()
-            for fit in population:
-                self.update_reference(fit.data)
-                fit_value = self.scalar(fit.data, self.weight, self.ref_point)
-                fit.set_fitness((fit_value,), 1)
-                # print(fits.data.wvalue, fits.value)
 
         next_population = self.advance(population)
         for fit in next_population:
@@ -273,6 +265,10 @@ class MOEAD(object):
         child = random.choice(list(self.mate_it(paretns)))
         # for child in self.mate_it(paretns):
         child_fit = child.evaluate(self.problem)
+        
+        if self.normalization:
+            child_fit = self.normalizing.normalize_fit(child_fit)   #normalize
+        
         self.update_reference(child)
         fit_value = self.scalar(child_fit.data, weight, self.ref_point)
         child_fit.set_fitness((fit_value,), 1)
