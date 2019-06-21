@@ -59,11 +59,17 @@ def main(model, out):
         initializer = UniformInitializer(n_dim)
         creator = Creator(initializer, indiv_pool)
 
+        crossover = SimulatedBinaryCrossover(rate=0.9, eta=40)
+
         if model == 'moead':
-            optimizer = MOEAD(problem=problem, pool=indiv_pool, ksize=10, normalization=True)
+            ksize = 10
+            options = {"ksize":ksize, "normalization":True, 
+                        "crossover":crossover}
+            optimizer = MOEAD(problem=problem, pool=indiv_pool, **options)
             optimizer.weight_generator(nobj=4, divisions=50)
             popsize = int(popsize)
             epoch = epoch
+            
         elif model == 'nsga2':
             optimizer = NSGA2(problem=problem, pool=indiv_pool, normalization=True)
         elif model == 'para':
@@ -157,6 +163,7 @@ def plt_anim(out):
 
     env,opt,history = get_model(out)
     datas, genomes, datas2 = get_gene_data(out)
+    datas = datas2
 
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(1,1,1)
@@ -179,12 +186,14 @@ def plt_anim(out):
 
     def ploting(frame):
         ax.cla()
+        # ax.set_xlim(-0.05, 1.2)
+        # ax.set_ylim(-0.05, 6.5)
         ax.set_xlim(-0.05, 1.2)
-        ax.set_ylim(-0.05, 6.5)
+        ax.set_ylim(-0.05, 1.2)
         ax.set_title(f"Generation={frame}")
         # normalize_line(frame)
         # sc = ax.scatter(datas[frame, -2], datas[frame, -1])
-        sc = ax.scatter(datas2[frame, -2], datas2[frame, -1])
+        sc = ax.scatter(datas[frame, -2], datas[frame, -1])
 
         return sc 
     
