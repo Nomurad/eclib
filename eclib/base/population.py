@@ -117,39 +117,40 @@ class Normalization(object):
         '''
         indivs = [fit.data for fit in population]
         self.obj_dim = len(indivs[0])
+        # self.weights = None
+        self.weights = population[0].data.weight
         self.max_obj_val = np.full(self.obj_dim, -np.inf)
         self.min_obj_val = np.full(self.obj_dim, np.inf)
-        self.weights = None
+
         # indivs_value = np.array([indiv.data.wvalue for indiv in population])
 
+        if self.weights is not None:
+            weight_exist = True
+            self.nega_or_posi = np.array([1 if i>0 else (-1) for i in self.weights])
+        
+            # for i in range(len(self.weights)):
+            #     self.max_obj_val[i] = self.nega_or_posi[i]*(self.max_obj_val[i])
+            #     self.max_obj_val[i] = self.nega_or_posi[i]*(self.min_obj_val[i])
+        else:
+            self.nega_or_posi = np.array([1 for i in range(self.obj_dim)])
+            
+        print("+ or - => ",self.nega_or_posi)
+
         for fit in population:
             for i in range(self.obj_dim):
                 data_value = fit.data.value[i]
-                self.max_obj_val[i] = max((data_value), (self.max_obj_val[i]))
-                self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
+                # self.max_obj_val[i] = max((data_value), (self.max_obj_val[i]))
+                # self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
+                self.max_obj_val[i], self.min_obj_val[i] = self.abs_minmax(data_value, i)
 
         if max_ref is not None:
             self.max_obj_val = max_ref
         if min_ref is not None:
             self.min_obj_val = min_ref
 
-        self.obj_range = self.max_obj_val - self.min_obj_val
-
-
-    def update_para(self, population, max_ref=None, min_ref=None):
-
-        for fit in population:
-            for i in range(self.obj_dim):
-                data_value = fit.data.value[i]
-                self.max_obj_val[i] = max((data_value), (self.max_obj_val[i]))
-                self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
-                
-        if max_ref is not None:
-            self.max_obj_val = max_ref
-        if min_ref is not None:
-            self.min_obj_val = min_ref
-
-        self.obj_range = self.max_obj_val - self.min_obj_val
+        print("normalize para(max,min) ",self.max_obj_val, self.min_obj_val)
+        self.obj_range = abs(self.max_obj_val - self.min_obj_val)
+        self.ref = self.reference()
 
     def __call__(self, population, initial=False, **kwargs):
         '''
@@ -159,10 +160,18 @@ class Normalization(object):
         if initial == False:
             self.update_para(population, **kwargs)
 
+        self.ref = self.reference()
+        ref = self.ref
+        for i in range(len(ref)):
+            if self.nega_or_posi[i] < 0:
+                ref[i] = self.max_obj_val[i]
+        # print("norm ref", ref)
+
         for i in range(len(population)):
-            population[i].data.wvalue = ((population[i].data.value-self.min_obj_val)/self.obj_range)
-            # population[i].data.wvalue = ((population[i].data.value)/self.max_obj_val)
-    
+            val = (population[i].data.value)
+            wvalue = (abs(val - ref)/self.obj_range)
+            population[i].data.wvalue = wvalue
+
         return population
 
     def normalize_fit(self, fitness, initial=False, **kwargs):
@@ -174,6 +183,61 @@ class Normalization(object):
             pop.append(fitness)
             self.update_para(pop, **kwargs)
         
-        fitness.data.wvalue = ((fitness.data.value-self.min_obj_val)/self.obj_range)
+        # ref = self.min_obj_val
+        ref = self.reference()
+        val = fitness.data.value
+        wvalue = (abs(val - ref)/self.obj_range)
+        fitness.data.wvalue = wvalue
 
         return fitness
+
+    def abs_minmax(self, val, index):
+        '''
+        絶対値が最大最小のものを返す
+        '''
+        abs_val = abs(val)
+        abs_max = abs(self.max_obj_val[index])
+        abs_min = abs(self.min_obj_val[index])
+
+        res_max = self.max_obj_val[index]
+        res_min = self.min_obj_val[index]
+
+        if abs_val > abs_max:
+            res_max = val
+        elif np.isinf(abs_max):
+            res_max = val
+            print("resmax = ",res_max)
+        
+        if abs_val < abs_min:
+            res_min = val
+        elif np.isinf(abs_min):
+            res_min = val
+            print("resmin = ",res_min)
+
+        return res_max, res_min
+
+    def update_para(self, population, max_ref=None, min_ref=None):
+
+        for fit in population:
+            for i in range(self.obj_dim):
+                data_value = fit.data.value[i]
+                # self.max_obj_val[i] = max((data_value), (self.max_obj_val[i]))
+                # self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
+                self.max_obj_val[i], self.min_obj_val[i] = self.abs_minmax(data_value, i)
+
+        if max_ref is not None:
+            self.max_obj_val = max_ref
+        if min_ref is not None:
+            self.min_obj_val = min_ref
+
+        self.obj_range = abs(self.max_obj_val - self.min_obj_val)
+        # self.ref = self.reference()
+
+        
+    def reference(self):
+        ref = self.min_obj_val.copy()
+        for i in range(len(ref)):
+            if self.nega_or_posi[i] < 0:
+                ref[i] = self.max_obj_val[i]
+
+        return ref

@@ -43,7 +43,8 @@ class Problem():
     def problem(self, x):
         # return x[0], x[0]**2
         x,y = zdt1(x)
-        return x, y
+        # return x, y
+        return x, 10-y
         # return rosenbrock(x)
 
 
@@ -56,10 +57,11 @@ def main(model, out):
 
     with Environment() as env:
         indiv_pool = env.register(Individual)
+        indiv_pool.cls.set_weight([1, -1])
         initializer = UniformInitializer(n_dim)
         creator = Creator(initializer, indiv_pool)
 
-        crossover = SimulatedBinaryCrossover(rate=0.9, eta=40)
+        crossover = SimulatedBinaryCrossover(rate=0.9, eta=100)
 
         if model == 'moead':
             ksize = 10
@@ -71,16 +73,16 @@ def main(model, out):
             epoch = epoch
             
         elif model == 'nsga2':
-            optimizer = NSGA2(problem=problem, pool=indiv_pool, normalization=True)
+            optimizer = NSGA2(problem=problem, pool=indiv_pool, normalization=False)
         elif model == 'para':
             optimizer = NSGA2_para(problem=problem, pool=indiv_pool)
 
         else:
             raise Exception('Unexpected model name')
 
-        # indiv_pool.cls.set_weight([1, -1])
         population = optimizer.init_population(creator, popsize=popsize)
         history = [population]
+        print("obj weight:",population[0].data.weight)
 
         for i in range(1,epoch+1):
             if i%50 == 0:
@@ -117,7 +119,6 @@ def get_model(out):
     env, optimizer, history = ut.load(file)
     return env, optimizer, history
 
-
 def get_gene_data(out):
     '''
     各世代の遺伝子と評価値を取得(世代数込み)
@@ -146,7 +147,7 @@ def plt_result(out):
     import matplotlib.pyplot as plt
     
     datas, genomes, datas2 = get_gene_data(out)
-    datas = datas
+    datas = datas2
 
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(1,1,1)
@@ -163,7 +164,7 @@ def plt_anim(out):
 
     env,opt,history = get_model(out)
     datas, genomes, datas2 = get_gene_data(out)
-    datas = datas2
+    # datas = datas2
 
     fig = plt.figure(figsize=(16,9))
     ax = fig.add_subplot(1,1,1)
@@ -189,7 +190,7 @@ def plt_anim(out):
         # ax.set_xlim(-0.05, 1.2)
         # ax.set_ylim(-0.05, 6.5)
         ax.set_xlim(-0.05, 1.2)
-        ax.set_ylim(-0.05, 1.2)
+        ax.set_ylim(-0.05, 12)
         ax.set_title(f"Generation={frame}")
         # normalize_line(frame)
         # sc = ax.scatter(datas[frame, -2], datas[frame, -1])
@@ -270,7 +271,8 @@ if __name__ == "__main__":
     out = os.path.join('result_test', model, args.out)
 
     if args.method == 'r':
-        # plt_result(out)
+        plt_result(out)
+    elif args.method == "a":
         plt_anim(out)
     elif args.method == "rm":
         rm_result()

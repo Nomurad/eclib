@@ -213,9 +213,6 @@ class MOEAD(object):
         if self.normalization:
             self.normalizing = Normalization(population)
             population = self.normalizing(population)
-            # population.normalize_para()
-            # population.normalizing()
-
 
         # self.calc_fitness(population)
         # self.weight = np.array([[i ,w] for i,w in zip(range(self.popsize), population[0].data.wvalue)])
@@ -223,7 +220,7 @@ class MOEAD(object):
 
         self.ref_point = np.min([fit.data.wvalue for fit in population], axis=0)
         # print(self.normalizing.max_obj_val)
-        print(self.ref_point)
+        print("ref point ",self.ref_point)
         return population
 
     def advance(self, population):
