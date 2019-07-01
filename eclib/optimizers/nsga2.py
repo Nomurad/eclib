@@ -85,9 +85,9 @@ class NSGA2(object):
             self.popsize = len(population)
 
         next_population = self.advance(population)
-        if self.normalization:
-            population = self.normalizing(population)
-            next_population = self.normalizing(next_population)
+        # if self.normalization:
+        #     population = self.normalizing(population)
+        #     next_population = self.normalizing(next_population)
 
         return self.alternate(population, next_population)
 
@@ -147,6 +147,8 @@ class NSGA2(object):
             #     normalize_para = joined.normalize_para()
             #     joined.normalizing(*normalize_para)
             #     print((normalize_para))
+            if self.normalization:
+                joined = self.normalizing(joined)   #normalize
 
             next_population = self.calc_fitness(joined, n=self.popsize)
             # print([fit.data.id for fit in next_population])
