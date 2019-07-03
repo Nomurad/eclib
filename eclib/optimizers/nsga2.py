@@ -148,7 +148,11 @@ class NSGA2(object):
             #     joined.normalizing(*normalize_para)
             #     print((normalize_para))
             if self.normalization:
-                joined = self.normalizing(joined)   #normalize
+                try:
+                    joined = self.normalizing(joined)   #normalize
+                except:
+                    self.normalizing = Normalization(joined)
+                    joined = self.normalizing(joined, initial=True)
 
             next_population = self.calc_fitness(joined, n=self.popsize)
             # print([fit.data.id for fit in next_population])
