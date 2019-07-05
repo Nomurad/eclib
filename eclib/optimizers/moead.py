@@ -123,10 +123,12 @@ class MOEAD(object):
             population.sort(key=attrgetter('data'))
 
         if self.normalization:
-            # population = self.normalizing(population, max_ref=np.array([1,1]))
-            population = self.normalizing(population)
-            # population.normalize_para()
-            # population.normalizing()
+            try:
+                population = self.normalizing(population)
+            except:
+                print("Normalizing init...")
+                self.normalizing = Normalization(population)
+                population = self.normalizing(population)
 
         next_population = self.advance(population)
         for fit in next_population:
@@ -193,14 +195,17 @@ class MOEAD(object):
             print([self.ref_point, np.array(indiv.wvalue)])
             raise
 
-    def init_population(self, creator, popsize=None):
+    def init_population(self, creator, popsize=None, popdata=None):
         ''' 初期集団生成
         '''
         if popsize:
             self.popsize = popsize
             self.init_weight()
 
-        population = Population(capacity=self.popsize, origin=self)
+        if not popdata:
+            population = Population(capacity=self.popsize, origin=self)
+        else:
+            population = Population(capacity=self.popsize, data=popdata)
 
         i = 0
         while not population.filled():
