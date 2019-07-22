@@ -91,7 +91,7 @@ class NSGA2(object):
 
         return self.alternate(population, next_population)
 
-    def init_population(self, creator, popsize=None):
+    def init_population(self, creator, popsize=None, **kwargs):
         ''' 初期集団生成
         '''
         if popsize:
