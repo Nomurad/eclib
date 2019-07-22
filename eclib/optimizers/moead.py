@@ -179,7 +179,7 @@ class MOEAD(object):
 
 
         self.table = np.array([get_neighbor2(i) for i in range(self.popsize)])
-        print(self.table)  #for debug
+        # print(self.table)  #for debug
         # print(self.weight)  #for debug
         self.ref_point = np.full(self.nobj, 'inf', dtype=np.float64)
 
