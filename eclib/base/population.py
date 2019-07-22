@@ -121,6 +121,8 @@ class Normalization(object):
         self.weights = population[0].data.weight
         self.max_obj_val = np.full(self.obj_dim, -np.inf)
         self.min_obj_val = np.full(self.obj_dim, np.inf)
+        self.selfset_max = None
+        self.selfset_min = None
 
         # indivs_value = np.array([indiv.data.wvalue for indiv in population])
 
@@ -145,8 +147,10 @@ class Normalization(object):
 
         if max_ref is not None:
             self.max_obj_val = max_ref
+            self.selfset_max = max_ref
         if min_ref is not None:
             self.min_obj_val = min_ref
+            self.selfset_min = min_ref
 
         print("normalize para(max,min) ",self.max_obj_val, self.min_obj_val)
         self.obj_range = abs(self.max_obj_val - self.min_obj_val)
@@ -225,10 +229,17 @@ class Normalization(object):
                 # self.min_obj_val[i] = min((data_value), (self.min_obj_val[i]))
                 self.max_obj_val[i], self.min_obj_val[i] = self.abs_minmax(data_value, i)
 
-        if max_ref is not None:
-            self.max_obj_val = max_ref
-        if min_ref is not None:
-            self.min_obj_val = min_ref
+        if self.selfset_max is not None:
+            if max_ref is not None:
+                self.max_obj_val = max_ref
+            else:
+                self.max_obj_val = self.selfset_max
+        
+        if self.selfset_min is not None:
+            if min_ref is not None:
+                self.min_obj_val = min_ref
+            else:
+                self.min_obj_val = self.selfset_min
 
         self.obj_range = abs(self.max_obj_val - self.min_obj_val)
         # self.ref = self.reference()
