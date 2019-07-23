@@ -107,8 +107,13 @@ class NSGA2(object):
             population.append(fitness)
 
         if self.normalization:
-            self.normalizing = Normalization(population)
-            population = self.normalizing(population, initial=True)
+            if kwargs["norm_ref"]:
+                max_ref, min_ref = kwargs["norm_ref"]
+                self.normalizing = Normalization(population, max_ref=max_ref, min_ref=min_ref)
+                population = self.normalizing(population, initial=True)
+            else:
+                self.normalizing = Normalization(population)
+                population = self.normalizing(population, initial=True)
 
         self.calc_fitness(population)
         return population
