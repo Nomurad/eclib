@@ -148,9 +148,11 @@ class Normalization(object):
         if max_ref is not None:
             self.max_obj_val = max_ref
             self.selfset_max = max_ref
+            print("normalizer reference[max]",self.max_obj_val)
         if min_ref is not None:
             self.min_obj_val = min_ref
             self.selfset_min = min_ref
+            print("normalizer reference[min]",self.min_obj_val)
 
         print("normalize para(max,min) ",self.max_obj_val, self.min_obj_val)
         self.obj_range = abs(self.max_obj_val - self.min_obj_val)
