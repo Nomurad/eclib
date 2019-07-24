@@ -109,6 +109,7 @@ class NSGA2(object):
         if self.normalization:
             if kwargs["norm_ref"]:
                 max_ref, min_ref = kwargs["norm_ref"]
+                print("set norm_ref")
                 self.normalizing = Normalization(population, max_ref=max_ref, min_ref=min_ref)
                 population = self.normalizing(population, initial=True)
             else:
