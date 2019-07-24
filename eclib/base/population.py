@@ -1,3 +1,4 @@
+import copy
 import numpy as np 
 
 class Population(object):
@@ -148,11 +149,11 @@ class Normalization(object):
         if max_ref is not None:
             self.max_obj_val = max_ref
             self.selfset_max = max_ref
-            print("normalizer reference[max]",self.max_obj_val)
+            print("normalizer reference[max]",self.max_obj_val, self.selfset_max)
         if min_ref is not None:
             self.min_obj_val = min_ref
             self.selfset_min = min_ref
-            print("normalizer reference[min]",self.min_obj_val)
+            print("normalizer reference[min]",self.min_obj_val, self.selfset_min)
 
         print("normalize para(max,min) ",self.max_obj_val, self.min_obj_val)
         self.obj_range = abs(self.max_obj_val - self.min_obj_val)
@@ -235,13 +236,13 @@ class Normalization(object):
             if max_ref is not None:
                 self.max_obj_val = max_ref
             else:
-                self.max_obj_val = self.selfset_max
+                self.max_obj_val = copy.deepcopy(self.selfset_max)
         
         if self.selfset_min is not None:
             if min_ref is not None:
                 self.min_obj_val = min_ref
             else:
-                self.min_obj_val = self.selfset_min
+                self.min_obj_val = copy.deepcopy(self.selfset_min)
 
         self.obj_range = abs(self.max_obj_val - self.min_obj_val)
         # self.ref = self.reference()
