@@ -10,4 +10,8 @@ config/
 result/
 .vs/
 test_result/
+result_test/
 temp.txt
+temp.json
+
+.vscode/

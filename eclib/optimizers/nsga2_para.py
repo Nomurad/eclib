@@ -24,13 +24,17 @@ import shutil
 from itertools import islice
 from operator import attrgetter, itemgetter
 
+from multiprocessing import Pool
+import multiprocessing as mp
+# from mpi4py import MPI
+# from mpi4py.futures import MPIPoolExecutor
+
 import numpy as np
 
 from ..base import Individual
 from ..base import Population
 from ..base import NondominatedSortIterator
 from ..base import CrowdingDistanceCalculator
-from ..base.population import Normalization
 from .iterators import SelectionIterator
 from .iterators import MatingIterator
 
@@ -45,6 +49,8 @@ from ..operations import BlendCrossover
 from ..operations import SimulatedBinaryCrossover
 from ..operations import PolynomialMutation
 
+from .mypool import MyPool
+
 # default_selection = TournamentSelection(ksize=2)
 default_selection = TournamentSelectionStrict(ksize=2)
 # default_selection = TournamentSelectionDCD()
@@ -55,23 +61,21 @@ default_mutation = PolynomialMutation(rate=0.05, eta=20)
 
 ################################################################################
 
-class NSGA2(object):
+class NSGA2_para(object):
     ''' NSGA-IIモデル
     '''
     name = 'NSGA-II'
 
-    def __init__(self, popsize=None, problem=None, pool=None, normalization=False,
+    def __init__(self, popsize=None, problem=None, pool=None,
                  selection=default_selection,
                  crossover=default_crossover,
                  mutation=default_mutation):
         self.popsize = popsize
         self.problem = problem
-        self.normalization = normalization
-        self.normalize_para = None
 
         self.n_parents = 2        # 1回の交叉の親個体の数
         self.n_cycle = 2          # 選択候補をリセットする周期(n_parentsの倍数にすること)
-        self.alternation = 'join' # 世代交代方法[replace , join]
+        self.alternation = 'join' # 世代交代方法
 
         self.select_it = SelectionIterator(selection=selection, pool=pool)
         self.mate_it = MatingIterator(crossover=crossover,
@@ -85,13 +89,19 @@ class NSGA2(object):
             self.popsize = len(population)
 
         next_population = self.advance(population)
-        # if self.normalization:
-        #     population = self.normalizing(population)
-        #     next_population = self.normalizing(next_population)
-
         return self.alternate(population, next_population)
 
-    def init_population(self, creator, popsize=None, **kwargs):
+    def init_eval(self, creator, population):
+        indiv = creator()
+        fitness = indiv.evaluate(self.problem)
+        # population.append(fitness)
+        return fitness
+        # return 100
+
+    def wrap_eval(self, args):
+        return self.init_eval(*args)
+
+    def init_population(self, creator, popsize=None):
         ''' 初期集団生成
         '''
         if popsize:
@@ -100,27 +110,39 @@ class NSGA2(object):
 
         population = Population(capacity=self.popsize,
                                 origin=self)
-        
-        i = 0
+
         while not population.filled():
-            i += 1
-            print(f"indiv{i:>3d}", end="\r")
             indiv = creator()
             fitness = indiv.evaluate(self.problem)
             population.append(fitness)
 
-        if self.normalization:
-            if kwargs["norm_ref"]:
-                max_ref, min_ref = kwargs["norm_ref"]
-                print("set norm_ref")
-                self.normalizing = Normalization(population, max_ref=max_ref, min_ref=min_ref)
-                population = self.normalizing(population, initial=True)
-            else:
-                self.normalizing = Normalization(population)
-                population = self.normalizing(population, initial=True)
+        def eval_para(n_indiv):
+            indiv = creator()
+            fitness = indiv.evaluate(self.problem)
+            population.append(fitness)
 
-        self.calc_fitness(population)
+        # comm = MPI.COMM_WORLD
+        # mpirank = comm.Get_rank()
+        # size = comm.Get_size()
+
+        # status = MPI.Status()
+        # print("status", status)
+
+        # p.map(self.wrap_eval, [(creator,population)])
+        p = Pool(int(mp.cpu_count()))
+        tmplist = [(creator,population) for i in range(popsize)]
+        fitnesses = p.map(self.wrap_eval, tmplist)
+
+        # print(fitnesses)
+        for i in range(popsize):
+            population.append(fitnesses[i])
+
+        #     child_fit = child.evaluate(self.problem)
+    
         return population
+
+    def wrap_adv_eval(self, args):
+        return self.adv_eval(*args)
 
     def advance(self, population):
         ''' 選択→交叉→突然変異→評価(→適応度計算→世代交代)
@@ -133,19 +155,24 @@ class NSGA2(object):
         while not next_population.filled():
             parents_it = list(islice(select_it, self.n_parents)) # Fixed
 
-            i = 0
             for child in self.mate_it(parents_it):
-                i += 1
-                print(f"indiv{i:>3d}", end="\r")
                 child_fit = child.evaluate(self.problem)
                 next_population.append(child_fit)
+
+        # p = Pool(int(mp.cpu_count()))
+        # tmplist = [(select_it,) for i in range(self.popsize)]
+        # child_fits = p.map(self.wrap_adv_eval, tmplist)
+        # print(child_fits)
+
+        # for i in range(self.popsize):
+        #     next_population.append(child_fits[i])
 
         return next_population
 
     def alternate(self, population, next_population):
         ''' 適応度計算 → 世代交代
-        1. [replace] 親世代を子世代で置き換える
-        2. [join] 親世代と子世代の和からランクを求める
+        1. 親世代を子世代で置き換える
+        2. 親世代と子世代の和からランクを求める
         '''
         if self.alternation == 'replace':
             self.calc_fitness(next_population)
@@ -153,19 +180,6 @@ class NSGA2(object):
 
         elif self.alternation == 'join':
             joined = population + next_population
-
-            # joined = Population(joined)
-            # if self.normalization:
-            #     normalize_para = joined.normalize_para()
-            #     joined.normalizing(*normalize_para)
-            #     print((normalize_para))
-            if self.normalization:
-                try:
-                    joined = self.normalizing(joined)   #normalize
-                except:
-                    self.normalizing = Normalization(joined)
-                    joined = self.normalizing(joined, initial=True)
-
             next_population = self.calc_fitness(joined, n=self.popsize)
             # print([fit.data.id for fit in next_population])
             # exit()

@@ -116,7 +116,7 @@ class CrowdingDistanceCalculator(object):
     def __init__(self, key=identity):
         self.key = key
 
-    def __call__(self, population):
+    def __call__(self, population, normalization=False):
         popsize = len(population)
         if popsize == 0:
             return
@@ -147,3 +147,5 @@ class CrowdingDistanceCalculator(object):
                 distances[c] += (get_value(r) - get_value(l)) / norm
 
         return distances
+
+

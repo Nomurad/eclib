@@ -75,12 +75,19 @@ class Individual(object):
 
     def evaluate(self, function):
         if not self.evaluated():
+            # def func(*args, **kwargs):
+            #     return (function(*args, **kwargs),)
+
             self.function = function
             self.value = function(self.get_variable())
+            self.value = np.array(self.value)
+            # len(self.value)
+
             if self.weight is not None:
                 self.wvalue = self.weight * self.value
             else:
                 self.wvalue = self.value
+
         return Fitness(self)
 
     def get_variable(self):
