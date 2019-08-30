@@ -236,7 +236,7 @@ class MOEAD(object):
         # select_it = iter(select_it) # Fixed
 
         for i in range(self.popsize):
-            # print(f"indiv{i:>3d}", end="\r")
+            print(f"indiv{i:>3d}", end="\r")
             child_fit = self.get_offspring(i, population, self.table[i],
                                            self.weight[i])
             next_population.append(child_fit)
