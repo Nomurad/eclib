@@ -15,3 +15,7 @@ temp.txt
 temp.json
 
 .vscode/
+
+build/*
+dist/
+*.egg-info
